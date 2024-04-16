@@ -1,0 +1,17 @@
+{
+  "name": "@mini-vue/reactive",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vitest": "^1.3.1",
+    "@mini-vue/shared": "workspace:^"
+  }
+}
