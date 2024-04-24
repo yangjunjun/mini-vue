@@ -29,7 +29,7 @@ const patchStyle = (el, prev, next) => {
         el.removeAttribute("style")
     }
 }
-const patchEvent = (el, rawName, prevValue, nextValue, instance = null) => {
+const patchEvent = (el, rawName, prevValue, nextValue) => {
     const eventName = rawName.slice(2).toLowerCase()
     let eventMap = el.eventMap
     if (!eventMap) {
@@ -57,7 +57,7 @@ const patchEvent = (el, rawName, prevValue, nextValue, instance = null) => {
     }
     const handler = (e) => {
         typeEventArray.forEach(event => {
-            event.call(instance, e)
+            event.call(null, e)
         })
     }
     let hasEventMap = el.hasEventMap

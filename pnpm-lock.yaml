@@ -8,6 +8,16 @@ importers:
 
   .: {}
 
+  packages/play:
+    dependencies:
+      '@mini-vue/runtime-dom':
+        specifier: workspace:^
+        version: link:../runtime-dom
+    devDependencies:
+      vite:
+        specifier: ^5.2.10
+        version: 5.2.10
+
   packages/reactive:
     dependencies:
       '@mini-vue/shared':
@@ -20,6 +30,9 @@ importers:
 
   packages/runtime-dom:
     dependencies:
+      '@mini-vue/reactive':
+        specifier: workspace:^
+        version: link:../reactive
       '@mini-vue/shared':
         specifier: workspace:^
         version: link:../shared
@@ -925,6 +938,41 @@ packages:
       - sugarss
       - supports-color
       - terser
+
+  /vite@5.2.10:
+    resolution: {integrity: sha512-PAzgUZbP7msvQvqdSD+ErD5qGnSFiGOoWmV5yAKUEI0kdhjbH6nMWVyZQC/hSc4aXwc0oJ9aEdIiF9Oje0JFCw==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': ^18.0.0 || >=20.0.0
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      esbuild: 0.20.2
+      postcss: 8.4.38
+      rollup: 4.14.3
+    optionalDependencies:
+      fsevents: 2.3.3
+    dev: true
 
   /vite@5.2.9:
     resolution: {integrity: sha512-uOQWfuZBlc6Y3W/DTuQ1Sr+oIXWvqljLvS881SVmAj00d5RdgShLcuXWxseWPd4HXwiYBFW/vXHfKFeqj9uQnw==}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vue-source - demo01</title>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { createApp, h} from './vue.runtime.esm-browser.js';
+console.log('--start--')
+
+const App = {
+    name: 'App',
+    data () {
+        return {
+            num: 0,
+        }
+    },
+    methods: {
+        increase () {
+            this.num++
+        },
+        decrease () {
+            this.num--
+        },
+    },    
+    render () {
+        return h('div', null, [
+            h('p', null, this.num),
+            h('button', {
+                id: 'increase',
+                onClick () {
+                    this.increase()
+                }
+            }, 'increase'),
+            h('button', {
+                id: 'decrease',
+                onClick () {
+                    this.decrease()
+                }
+            }, 'decrease'),            
+        ])
+    }
+}
+const app = createApp(App)
+app.mount(document.querySelector('#app'))
+
+</script>
+</body>
+</html>

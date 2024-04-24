@@ -1,6 +1,9 @@
+import { isObject } from '@mini-vue/shared'
+import { reactive, effect } from '@mini-vue/reactive'
 import { patchProp } from './patchProp.js'
-export const Text = Symbol('Text')
-export const Fragment = Symbol('Fragment')
+import { h } from './h.js'
+const Text = Symbol('Text')
+const Fragment = Symbol('Fragment')
 
 const createRender = (options = {}) => {
     const {
@@ -18,6 +21,10 @@ const createRender = (options = {}) => {
 
     const mountElement = (vnode, container, anchor) => {
         const el = vnode.el = createElement(vnode.type)
+        // 如果是组件产生的 subtree
+        if (vnode.vnode) {
+            vnode.vnode.el = el
+        }
         // 处理 children
         if (Array.isArray(vnode.children)) {
             vnode.children.forEach(item => {
@@ -44,15 +51,70 @@ const createRender = (options = {}) => {
             mount(item, container, null)
         })
     }    
-    const mount = (vnode, container, anchor = null) => {
-        if (typeof vnode.type === 'string') {
-            mountElement(vnode, container, anchor)
-        } else if (vnode.type === Text) {
-            mountText(vnode, container, anchor)
-        } else if (vnode.type === Fragment) {
-            mountFragment(vnode, container, anchor)
-        } else {
-            throw new Error('Not known vnode.type', vnode.type)
+    const mountComponent = (vnode, container, anchor) => {
+        const componentOptions = vnode.type
+        const { data, render, methods } = componentOptions
+
+        const state = reactive(data ? data() : {})
+        const $methods = {}
+        if (methods) {
+            Object.keys(methods).forEach(key => {
+                $methods[key] = methods[key].bind(state)
+            })
+        }
+        const instance = {
+            state,
+            inMounted: false,
+            subtree: null,
+            $methods,
+        }
+        const proxy = new Proxy(instance, {
+            get (target, key, receiver) {
+                if (key in target.state) {
+                    return target.state[key]
+                } else if (key in target.$methods) {
+                    return target.$methods[key]
+                } else {
+                    return target[key]
+                }
+            },
+            set (target, key, newValue, receiver) {
+                if (key in target.state) {
+                    target.state[key] = newValue
+                } else {
+                    console.warn(`min-vue, set in target[${key}] is not allowed`)
+                }
+            }
+        })
+        vnode.instance = proxy
+        effect(() => {
+            const subtree = render.call(proxy, proxy)
+            if (subtree) {
+                subtree.vnode = vnode
+            }                
+            if (!instance.subtree) {
+                mount(subtree, container, anchor)   
+                instance.inMounted = true
+            } else {
+                patch(instance.subtree, subtree, container)
+            }
+            vnode.subtree = subtree
+            instance.subtree = subtree
+        })
+    }
+    const mount = (vnode, container, anchor = null, instance = null) => {
+        if (vnode) {
+            if (typeof vnode.type === 'string') {
+                mountElement(vnode, container, anchor, instance)
+            } else if (vnode.type === Text) {
+                mountText(vnode, container, anchor)
+            } else if (vnode.type === Fragment) {
+                mountFragment(vnode, container, anchor)
+            } else if (isObject(vnode.type)) {
+                mountComponent(vnode, container, anchor)
+            } else {
+                throw new Error('Not known vnode.type', vnode.type)
+            }            
         }
     }
 
@@ -108,6 +170,12 @@ const createRender = (options = {}) => {
             patchChildren(n1, n2, container)
         }
     }
+    const patchComponent = (n1, n2, container) => {
+        const { render } = n2.type
+        const subtree = render()
+        n2.subtree = subtree
+        patch(n1.subtree, subtree, container)
+    }   
     /**
      * patch 
      * @param {*} n1 旧 vnode
@@ -115,13 +183,15 @@ const createRender = (options = {}) => {
      * @param {*} container 容器
      */
     const patch = function (n1, n2, container) {
-        if (n1.type === n2.type) {
+        if (n2 && n1.type === n2.type) {
             if (typeof n2.type === 'string') {
                 patchElement(n1, n2, container)
             } else if (n2.type === Text) {
                 patchText(n1, n2, container)
             } else if (n2.type === Fragment) {
                 patchFragment(n1, n2, container)
+            } else if (isObject(n2.type)) {
+                patchComponent(n1, n2, container)
             } else {
                 throw new Error('Not known vnode.type', vnode.type)
             }
@@ -265,5 +335,8 @@ const renderer = createRender({
 })
 
 export {
-    renderer
+    renderer,
+    Text,
+    Fragment,
+    h,
 }
