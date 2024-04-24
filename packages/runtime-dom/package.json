@@ -1,9 +1,8 @@
 {
-  "name": "@mini-vue/reactive",
+  "name": "@mini-vue/runtime-dom",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
     "test": "vitest"
   },
@@ -12,8 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "@mini-vue/shared": "workspace:^"
-  },
+  }, 
   "devDependencies": {
+    "jsdom": "^24.0.0",
     "vitest": "^1.3.1"
-  }  
+  }
 }

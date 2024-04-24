@@ -75,7 +75,6 @@ export const trigger = (target, type, key, newValue, oldValue) => {
 
 const ITERATE_KEY = Symbol('iterate')
 
-
 export const reactive = (obj) => {
     if (isMap(obj)) {
         return new Proxy(obj, {
@@ -190,8 +189,6 @@ export const reactive = (obj) => {
         })
     }
 }
-
-
 
 export const ref = (val) => {
     const obj = {
