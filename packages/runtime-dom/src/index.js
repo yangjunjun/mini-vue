@@ -1,4 +1,6 @@
 import { patchProp } from './patchProp.js'
+export const Text = Symbol('Text')
+export const Fragment = Symbol('Fragment')
 
 const createRender = (options = {}) => {
     const {
@@ -14,7 +16,7 @@ const createRender = (options = {}) => {
         patchProp,
     } = options
 
-    const mount = (vnode, container, anchor = null) => {
+    const mountElement = (vnode, container, anchor) => {
         const el = vnode.el = createElement(vnode.type)
         // 处理 children
         if (Array.isArray(vnode.children)) {
@@ -32,6 +34,27 @@ const createRender = (options = {}) => {
         }
         insert(el, container, anchor)
     }
+    const mountText = (vnode, container, anchor) => {
+        const el = vnode.el = createText(vnode.children)
+        insert(el, container, anchor)
+    }    
+    const mountFragment = (vnode, container, anchor) => {
+        vnode.el = container
+        vnode.children.forEach(item => {
+            mount(item, container, null)
+        })
+    }    
+    const mount = (vnode, container, anchor = null) => {
+        if (typeof vnode.type === 'string') {
+            mountElement(vnode, container, anchor)
+        } else if (vnode.type === Text) {
+            mountText(vnode, container, anchor)
+        } else if (vnode.type === Fragment) {
+            mountFragment(vnode, container, anchor)
+        } else {
+            throw new Error('Not known vnode.type', vnode.type)
+        }
+    }
 
     const hasKey = (vnodes) => {
         return vnodes.some(item => item.key)
@@ -47,6 +70,44 @@ const createRender = (options = {}) => {
             patchProp(el, key, oldProps[key], newProps[key])
         }
     }
+    const patchElement = (n1, n2, container) => {
+        const el = n2.el = n1.el
+        const oldProps = n1.props || {}
+        const newProps = n2.props || {}            
+        if (Array.isArray(n1.children) && Array.isArray(n2.children)) {
+            if (hasKey(n2.children)) {
+                patchKeysChildren(n1, n2, el)
+            } else {
+                patchChildren(n1, n2, el)
+            }
+        } else if (Array.isArray(n1.children) && typeof n2.children === 'string') {
+            n1.children.forEach(item => {
+                unmount(item)
+            })
+            setElementText(el, n2.children)
+        } else if (typeof n1.children === 'string' && Array.isArray(n2.children)) {
+            setElementText(el, '')
+            n2.children.forEach(item => {
+                mount(item, el)
+            })
+        } else {
+            setElementText(el, n2.children)
+        }
+        patchProps(el, oldProps, newProps) 
+    }
+    const patchText = (n1, n2, container) => {
+        const el = n2.el = n1.el
+        if (n1.children !== n2.children) {
+            setText(el, n2.children)
+        }
+    }
+    const patchFragment = (n1, n2, container) => {
+        if (hasKey(n2.children)) {
+            patchKeysChildren(n1, n2, container)
+        } else {
+            patchChildren(n1, n2, container)
+        }
+    }
     /**
      * patch 
      * @param {*} n1 旧 vnode
@@ -55,29 +116,15 @@ const createRender = (options = {}) => {
      */
     const patch = function (n1, n2, container) {
         if (n1.type === n2.type) {
-            const el = n2.el = n1.el
-            const oldProps = n1.props || {}
-            const newProps = n2.props || {}            
-            if (Array.isArray(n1.children) && Array.isArray(n2.children)) {
-                if (hasKey(n2.children)) {
-                    patchKeysChildren(n1, n2, el)
-                } else {
-                    patchChildren(n1, n2, el)
-                }
-            } else if (Array.isArray(n1.children) && typeof n2.children === 'string') {
-                n1.children.forEach(item => {
-                    unmount(item)
-                })
-                setElementText(el, n2.children)
-            } else if (typeof n1.children === 'string' && Array.isArray(n2.children)) {
-                setElementText(el, '')
-                n2.children.forEach(item => {
-                    mount(item, el)
-                })
+            if (typeof n2.type === 'string') {
+                patchElement(n1, n2, container)
+            } else if (n2.type === Text) {
+                patchText(n1, n2, container)
+            } else if (n2.type === Fragment) {
+                patchFragment(n1, n2, container)
             } else {
-                setElementText(el, n2.children)
+                throw new Error('Not known vnode.type', vnode.type)
             }
-            patchProps(el, oldProps, newProps)
         } else {
             const anchor = nextSibling(n1.el)
             unmount(n1)
