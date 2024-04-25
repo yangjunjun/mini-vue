@@ -26,19 +26,19 @@ const App = {
             this.num--
         },
     },    
-    render () {
+    render (proxy) {
         return h('div', null, [
             h('p', null, this.num),
             h('button', {
                 id: 'increase',
                 onClick () {
-                    this.increase()
+                    proxy.increase()
                 }
             }, 'increase'),
             h('button', {
                 id: 'decrease',
                 onClick () {
-                    this.decrease()
+                    proxy.decrease()
                 }
             }, 'decrease'),            
         ])

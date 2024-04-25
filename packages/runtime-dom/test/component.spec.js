@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { renderer } from '../src/index.js'
+import { reactive } from "@mini-vue/reactive";
+import { renderer, h} from '../src/index.js'
 
 // @vitest-environment jsdom
 
@@ -58,45 +59,10 @@ describe('Component', () => {
         renderer.render(n4, container)
         expect(container.innerHTML).toEqual('')                       
     })
-    it('same type', () => {
-        const container = document.body
-        const Comp = {
-            render () {
-                return {
-                    type: 'div',
-                    children: 'foo',
-                }
-            }
-        }
-        const n1 = {
-            type: Comp
-        }
-        renderer.render(n1, container)
-        expect(container.innerHTML).toEqual('<div>foo</div>') 
-        Comp.render = () => {
-            return  {
-                type: 'div',
-                children: 'bar',
-            }
-        }
-        const n2 = {
-            type: Comp
-        }
-        renderer.render(n2, container)
-        expect(container.innerHTML).toEqual('<div>bar</div>')  
-
-        Comp.render = () => {
-            return null
-        }
-        const n3 = {
-            type: Comp
-        }
-        renderer.render(n3, container)
-        expect(container.innerHTML).toEqual('')                     
-    })
 })
 
 describe('Component - state', () => {
+    const container = document.body
     beforeEach(() => {
         while (document.body.firstChild) {
             document.body.removeChild(document.body.firstChild);
@@ -104,7 +70,6 @@ describe('Component - state', () => {
         delete document.body._vnode
     })
     it('basic', () => {
-        const container = document.body
         const Comp = {
             name: 'test',
             data () {
@@ -125,8 +90,7 @@ describe('Component - state', () => {
         renderer.render(n1, container)
         expect(container.innerHTML).toEqual('<div>0</div>') 
     })
-    it('change', () => {
-        const container = document.body
+    it('state change', () => {
         const Comp = {
             name: 'test',
             data () {
@@ -179,6 +143,7 @@ describe('Component - state', () => {
         renderer.render(n1, container)
         const target = container.querySelector('#target')
         expect(target.innerHTML).toEqual('0') 
+
         const btnIncrease = container.querySelector('#increase')
         btnIncrease.click()
         expect(target.innerHTML).toEqual('1')
@@ -186,5 +151,157 @@ describe('Component - state', () => {
         const btnDecrease = container.querySelector('#decrease')
         btnDecrease.click()
         expect(target.innerHTML).toEqual('0')        
+    })
+    it('props', () => {
+        const Child = {
+            name: 'Child',
+            props: {
+                num: {
+                    type: Number,
+                },
+            },
+            render () {
+                return h('div', {
+                    id: 'child'
+                }, this.num)
+            }
+        }
+        const App = {
+            name: 'App',
+            data () {
+                return {
+                    num: 0
+                }
+            },
+            render(proxy) {
+                return h('div', {}, [
+                    h('button', {
+                        onClick () {
+                            proxy.num = proxy.num + 1
+                        }
+                    }, 'clickme'),
+                    h(Child, {
+                        num: this.num,
+                    })
+                ])
+            }
+        }
+        renderer.render(h(App), container)
+        const target = container.querySelector('#child')
+        expect(target.innerHTML).toEqual('0')
+
+        const button = container.querySelector('button')
+        button.click()
+        expect(target.innerHTML).toEqual('1')
+    }) 
+    it('setup', () => {
+        const Comp = {
+            setup () {
+                const state = reactive({
+                    num: 0,
+                })
+                const increase = () => {
+                    state.num++
+                }
+                return () => {
+                    return h('div', null, [
+                        h('button', {
+                            onClick () {
+                                increase()
+                            }
+                        }, 'click'),
+                        h('div', {
+                            id: 'target',
+                        }, state.num)
+                    ])
+                }
+            }
+        }
+        renderer.render(h(Comp), container)
+        const target = container.querySelector('#target')
+        expect(target.innerHTML).toEqual('0')   
+        
+        const button = container.querySelector('button')
+        button.click()
+        expect(target.innerHTML).toEqual('1')
+
+    })   
+    it('custom event', () => {
+        const Child = {
+            name: 'Child',
+            render (proxy) {
+                return h('button', {
+                    onClick () {
+                        proxy.emit('click')
+                    }
+                }, 'click')
+            }
+        }
+        const App = {
+            name: 'App',
+            data () {
+                return {
+                    num: 0
+                }
+            },
+            render(proxy) {
+                return h('div', {}, [
+                    h('p', {id: 'target'}, this.num),
+                    h(Child, {
+                        onClick: () => {
+                            proxy.num++
+                        },
+                    })
+                ])
+            }
+        }       
+        renderer.render(h(App), container)
+        const target = container.querySelector('#target')
+        expect(target.innerHTML).toEqual('0')   
+        
+        const button = container.querySelector('button')
+        button.click()
+        expect(target.innerHTML).toEqual('1')
+
+    })
+    it('setup event', () => {
+        const Child = {
+            name: 'Child',
+            setup (props, { emit }) {
+                return () => {
+                    return h('button', {
+                        onClick () {
+                            emit('click')
+                        }
+                    }, 'click')
+                }
+            },
+        }
+        const App = {
+            name: 'App',
+            data () {
+                return {
+                    num: 0
+                }
+            },
+            render(proxy) {
+                return h('div', {}, [
+                    h('p', {id: 'target'}, this.num),
+                    h(Child, {
+                        onClick: () => {
+                            proxy.num++
+                        },
+                    })
+                ])
+            }
+        }       
+        renderer.render(h(App), container)
+        const target = container.querySelector('#target')
+        expect(target.innerHTML).toEqual('0')   
+        
+        const button = container.querySelector('button')
+        button.click()
+        expect(target.innerHTML).toEqual('1')
+
     })    
 })

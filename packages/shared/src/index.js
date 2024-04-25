@@ -25,11 +25,14 @@ const hyphenateRE = /\B([A-Z])/g;
 const hyphenate = cacheStringFunction(
     (str) => str.replace(hyphenateRE, "-$1").toLowerCase()
 )
-
+const capitalise = cacheStringFunction(
+    (str) => str.slice(0, 1).toUpperCase() + str.slice(1)
+)
 export {
     isMap,
     isObject,
     isArray,
     hasOwn,
     hyphenate,
+    capitalise,
 }

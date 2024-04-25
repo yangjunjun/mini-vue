@@ -1,49 +1,44 @@
-import { renderer, h} from '@mini-vue/runtime-dom'
+import { renderer, h, Text} from '@mini-vue/runtime-dom'
 console.log('--start--')
-const Comp = {
-    name: 'test',
-    data () {
-        return {
-            num: 0,
-        }
-    },
-    methods: {
-        increase () {
-            this.num++
-        },
-        decrease () {
-            this.num--
-        },
-    },
+
+const Child = {
+    name: 'Child',
     render (proxy) {
-        return {
-            type: 'div',
-            children: [{
-                type: 'p',
-                props: {
-                    id: 'target',
-                },
-                children: this.num,
-            }, {
-                type: 'button',
-                props: {
-                    id: 'increase',
-                    onClick () {
-                        proxy.increase()
-                    }
-                },
-                children: 'increase',
-            }, {
-                type: 'button',
-                props: {
-                    id: 'decrease',
-                    onClick () {
-                        proxy.decrease()
-                    }
-                },
-                children: 'decrease',
-            }]
-        }
+        return h('div', null, [
+            h('div', { class: 'header'}, [
+                proxy.$slot.header()
+            ]),
+            h('div', { class: 'body'}, [
+                proxy.$slot.default()
+            ]),
+            h('div', { class: 'footer'}, [
+                proxy.$slot.footer()
+            ]),            
+        ])
     }
 }
-renderer.render({ type: Comp }, document.querySelector('#app'))
+const App = h({
+    name: 'App',
+    data () {
+        return {
+            num: 0
+        }
+    },
+    render(proxy) {
+        return h('div', {}, [
+            h('p', {}, this.num),
+            h(Child, null, {
+                header () {
+                    return h(Text, null, 'header')
+                },
+                default () {
+                    return h(Text, null, 'body')
+                },                
+                footer () {
+                    return h(Text, null, 'footer')
+                },                
+            })
+        ])
+    }
+})
+renderer.render(App, document.querySelector('#app'))

@@ -1,7 +1,9 @@
-import { isObject } from '@mini-vue/shared'
+import { isObject, capitalise } from '@mini-vue/shared'
 import { reactive, effect } from '@mini-vue/reactive'
 import { patchProp } from './patchProp.js'
 import { h } from './h.js'
+import { resolveProps, hasPropsChanged } from './resolveProps.js'
+
 const Text = Symbol('Text')
 const Fragment = Symbol('Fragment')
 
@@ -53,27 +55,70 @@ const createRender = (options = {}) => {
     }    
     const mountComponent = (vnode, container, anchor) => {
         const componentOptions = vnode.type
-        const { data, render, methods } = componentOptions
+        let { 
+            data, render, methods, beforeCreated, created, 
+            beforeMounted, mounted, beforeUpdated, updated, 
+            props: propsOption, setup,
+        } = componentOptions
+        
+        beforeCreated && beforeCreated()
 
         const state = reactive(data ? data() : {})
-        const $methods = {}
-        if (methods) {
-            Object.keys(methods).forEach(key => {
-                $methods[key] = methods[key].bind(state)
-            })
+        const [props, attrs] = resolveProps(propsOption, vnode.props)
+        
+        const emit = (key, ...args) => {
+            const eventKey = `on${capitalise(key)}`
+            if (attrs[eventKey] && typeof attrs[eventKey] === 'function'){
+                attrs[eventKey](...args)
+            }
+        }
+        let slots = {}
+        if (vnode.children) {
+            slots = vnode.children
         }
         const instance = {
             state,
+            props: reactive(props),
+            attrs,
             inMounted: false,
             subtree: null,
-            $methods,
+            methods,
+            emit,
+            slots,
         }
-        const proxy = new Proxy(instance, {
+        let setupState = null
+        if (setup) {
+            const setupContext = {
+                attrs,
+                emit,
+                slots,
+            }
+            const setupResult = setup(instance.props, setupContext)       
+            if (typeof setupResult === 'function') {
+                if (render) {
+                    console.error('setup 返回渲染函数，render 选项将被忽略！')
+                }
+                render = setupResult
+            } else {
+                setupState = setupResult
+            }
+        }
+
+        vnode.instance = instance
+        const renderContext = new Proxy(instance, {
             get (target, key, receiver) {
                 if (key in target.state) {
                     return target.state[key]
-                } else if (key in target.$methods) {
-                    return target.$methods[key]
+                } else if (key in target.props) {
+                    return target.props[key]
+                } else if (key in target.attrs) {
+                    return target.attrs[key]
+                } else if (setupState && key in setupState) {
+                    return setupState[key]
+                } else if (target.methods && key in target.methods) {
+                    return target.methods[key]
+                } else if (key === '$slot') {
+                    return target.slots
                 } else {
                     return target[key]
                 }
@@ -81,22 +126,31 @@ const createRender = (options = {}) => {
             set (target, key, newValue, receiver) {
                 if (key in target.state) {
                     target.state[key] = newValue
+                    return true
+                } else if (setupState && key in setupState) {
+                    setupState[key] = newValue
+                    return true
                 } else {
                     console.warn(`min-vue, set in target[${key}] is not allowed`)
                 }
             }
         })
-        vnode.instance = proxy
+        
+        created && created.call(renderContext)
         effect(() => {
-            const subtree = render.call(proxy, proxy)
+            const subtree = render.call(renderContext, renderContext)
             if (subtree) {
                 subtree.vnode = vnode
             }                
             if (!instance.subtree) {
+                beforeMounted && beforeMounted.call(renderContext)
                 mount(subtree, container, anchor)   
                 instance.inMounted = true
+                mounted && mounted.call(renderContext)
             } else {
+                beforeUpdated && beforeUpdated.call(renderContext)
                 patch(instance.subtree, subtree, container)
+                updated && updated.call(renderContext)
             }
             vnode.subtree = subtree
             instance.subtree = subtree
@@ -171,10 +225,19 @@ const createRender = (options = {}) => {
         }
     }
     const patchComponent = (n1, n2, container) => {
-        const { render } = n2.type
-        const subtree = render()
-        n2.subtree = subtree
-        patch(n1.subtree, subtree, container)
+        const instance = n2.instance = n1.instance
+        const { props } = instance
+        if (hasPropsChanged(n1.props, n2.props)) {
+            const [ nextProps ] = resolveProps(n2.type.props, n2.props)
+            for(const key in nextProps) {
+                props[key] = nextProps[key]
+            }
+            for(const k in props) {
+                if (!(k in nextProps)) {
+                    delete props[key]
+                }
+            }
+        }
     }   
     /**
      * patch 
@@ -339,4 +402,5 @@ export {
     Text,
     Fragment,
     h,
+    reactive,
 }
