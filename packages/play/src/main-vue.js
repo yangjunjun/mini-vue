@@ -1,4 +1,5 @@
-import { renderer, h, KeepAlive, onMounted, onUnmounted} from '@mini-vue/runtime-dom'
+import { createApp, h, KeepAlive, onMounted } from './vue.runtime.esm-browser'
+// import { renderer, h, KeepAlive, onMounted } from '@mini-vue/runtime-dom'
 console.log('--start--')
 
 // 生命周期演示
@@ -12,15 +13,10 @@ const Child1 = {
     name: 'Child1',
     setup () {
         onMounted(function () {
-            console.log('Child1 mounted', this)
+            console.log('Child mounted', this)
         })
-        onUnmounted(function () {
-            console.log('Child1 unmounted', this)
-        })         
         return () => {
-            return h('input', {
-                value: 'child1'
-            })
+            return h('div', null, 'child1')
         }
     }
 }
@@ -28,16 +24,10 @@ const Child2 = {
     name: 'Child2',
     setup () {
         onMounted(function () {
-            console.log('Child2 mounted', this)
+            console.log('Child mounted', this)
         })
-        onUnmounted(function () {
-            console.log('Child2 unmounted', this)
-        })        
-        
         return () => {
-            return h('input', {
-                value: 'child2'
-            })
+            return h('div', null, 'child2')
         }
     }
 }
@@ -60,7 +50,6 @@ const App = {
                     proxy.flag = !proxy.flag
                 }
             }, 'click'),
-            // proxy.flag ? h(Child1) : h(Child2),
             h(KeepAlive, null, {
                 default () {
                     return proxy.flag ? h(Child1) : h(Child2)
@@ -71,4 +60,4 @@ const App = {
     }
 }
 
-renderer.render(h(App), document.querySelector('#app'))
+createApp(h(App)).mount(document.querySelector('#app'))
