@@ -42,7 +42,14 @@ const createRender = (options = {}) => {
                 patchProp(el, key, null, vnode.props[key])
             }
         }
+        const needTransition = vnode.transition
+        if (needTransition) {
+            vnode.transition.beforeEnter(el)
+        }
         insert(el, container, anchor)
+        if (needTransition) {
+            vnode.transition.enter(el)
+        }
     }
     const mountText = (vnode, container, anchor) => {
         const el = vnode.el = createText(vnode.children)
@@ -421,10 +428,17 @@ const createRender = (options = {}) => {
                     unmountComponent(vnode)
                 }
             } else {
-                const el = vnode.el
-                if (el) {
-                    remove(el)
-                }            
+                const needTransition = vnode.transition
+                const parent = vnode.el.parentNode
+                if (parent) {
+                    const performRemove = () => parent.removeChild(vnode.el)
+                    if (needTransition) {
+                        vnode.transition.leave(vnode.el, performRemove)
+                    } else {
+                        performRemove()
+                    }                    
+                }       
+
             }            
         }
     }

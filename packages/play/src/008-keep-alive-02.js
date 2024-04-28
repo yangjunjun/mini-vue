@@ -1,4 +1,4 @@
-import { renderer, h, Transition, reactive, onMounted} from '@mini-vue/runtime-dom'
+import { renderer, h, KeepAlive, reactive, onMounted} from '@mini-vue/runtime-dom'
 console.log('--start--')
 
 const App = {
@@ -17,7 +17,7 @@ const App = {
                         state.flag = !state.flag
                     }
                 }, 'click'),
-                state.flag ? h(Transition, null, {
+                state.flag ? h(KeepAlive, null, {
                     default () {
                         return h('div', {id: 'target'}, 'hello')
                     }
