@@ -4,7 +4,9 @@ let currentInstance = null
 function setCurrentInstance(instance) {
     currentInstance = instance
 }
-
+function getCurrentInstance () {
+    return currentInstance
+}
 function beforeMount(fn) {
     if (currentInstance) {
         currentInstance.beforeMount.push(fn)
@@ -56,6 +58,7 @@ function onUnmounted(fn) {
 export {
     currentInstance,
     setCurrentInstance,
+    getCurrentInstance,
 
     beforeMount,
     onMounted,

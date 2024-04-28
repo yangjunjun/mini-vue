@@ -74,7 +74,11 @@ const createRender = (options = {}) => {
             }
         }
         let slots = {}
-        if (vnode.children) {
+        if (Array.isArray(vnode.children)) {
+            slots.default = () => {
+                return vnode.children
+            }  
+        } else {
             slots = vnode.children
         }
         const instance = {
@@ -165,10 +169,11 @@ const createRender = (options = {}) => {
         
         created && created.call(renderContext)
         effect(() => {
-            console.log('vnode', vnode)
+            // console.log('vnode', vnode)
             const subtree = render.call(renderContext, renderContext)
             if (!instance.inMounted) {
                 instance.beforeMount.forEach(fn => fn.call(renderContext))
+
                 mount(subtree, container, anchor)   
                 instance.inMounted = true
                 instance.mounted.forEach(fn => fn.call(renderContext))
@@ -189,9 +194,18 @@ const createRender = (options = {}) => {
             } else if (vnode.type === Fragment) {
                 mountFragment(vnode, container, anchor)
             } else if (isObject(vnode.type)) {
-                // 如果父组件是 keep-alive
                 if (vnode.keptAlive) {
                     vnode.keepAliveInstance._activate(vnode, container, anchor)
+                } else if (vnode.type.__isTeleport) {
+                    vnode.el = container
+                    vnode.type.process(null, vnode, container, anchor, {
+                        mount,
+                        patchChildren,
+                        unmount,
+                        move(vnode, container, anchor) {
+                            insert(getVnodeEl(vnode), container, anchor)
+                        }
+                    })
                 } else {
                     mountComponent(vnode, container, anchor)
                 }
@@ -202,7 +216,7 @@ const createRender = (options = {}) => {
     }
 
     const hasKey = (vnodes) => {
-        return vnodes.some(item => item.key)
+        return vnodes.some(item => item && item.key)
     }
 
     const patchProps = (el, oldProps, newProps) => {
@@ -268,6 +282,16 @@ const createRender = (options = {}) => {
             }
         }
     }   
+    // 获取 vnode 对应的 el
+    const getVnodeEl = (vnode) => {
+        if (!vnode) {
+            return null
+        } else if (vnode.el) {
+            return vnode.el
+        } else if (isObject(vnode.type)) {
+            return getVnodeEl(vnode.instance.subtree)
+        }
+    }
     /**
      * patch 
      * @param {*} n1 旧 vnode
@@ -275,7 +299,7 @@ const createRender = (options = {}) => {
      * @param {*} container 容器
      */
     const patch = function (n1, n2, container) {
-        if (n2 && n1.type === n2.type) {
+        if (n1 && n2 && n1.type === n2.type) {
             if (typeof n2.type === 'string') {
                 patchElement(n1, n2, container)
             } else if (n2.type === Text) {
@@ -283,16 +307,24 @@ const createRender = (options = {}) => {
             } else if (n2.type === Fragment) {
                 patchFragment(n1, n2, container)
             } else if (isObject(n2.type)) {
-                patchComponent(n1, n2, container)
+                if (n2.type.__isTeleport) {
+                    n2.type.process(n1, n2, container, null, {
+                        mount,
+                        patchChildren,
+                        unmount,
+                        move(vnode, container, anchor) {
+                            insert(getVnodeEl(vnode), container, anchor)
+                        }
+                    })
+                } else {
+                    patchComponent(n1, n2, container)
+                }
             } else {
                 throw new Error('Not known vnode.type', vnode.type)
             }
         } else {
-            let el = n1.el
-            if (isObject(n1.type)) {
-                el = n1?.instance?.subtree?.el
-            }
-            const anchor = nextSibling(el)
+            const el = getVnodeEl(n1)
+            const anchor = (el && nextSibling(el)) || null
             unmount(n1)
             // todo 获取 anchor
             mount(n2, container, anchor)
@@ -377,19 +409,22 @@ const createRender = (options = {}) => {
         instance.unmounted.forEach(fn => fn())
     }
     const unmount = function (vnode) {
-        if (vnode.type === Fragment) {
-            vnode.children.forEach(c => unmount(c))
-            return
-        } else if (isObject(vnode.type)) {
-            if (vnode.shouldKeepAlive) {
-                vnode.keepAliveInstance._deActivate(vnode)
+        if (vnode) {
+            if (vnode.type === Fragment) {
+                vnode.children.forEach(c => unmount(c))
+            } else if (isObject(vnode.type)) {
+                if (vnode.shouldKeepAlive) {
+                    vnode.keepAliveInstance._deActivate(vnode)
+                } else if (vnode.type.__isTeleport) {
+                    vnode.children.forEach(c => unmount(c))
+                } else {
+                    unmountComponent(vnode)
+                }
             } else {
-                unmountComponent(vnode)
-            }
-        } else {
-            const el = vnode.el
-            if (el) {
-                remove(el)
+                const el = vnode.el
+                if (el) {
+                    remove(el)
+                }            
             }            
         }
     }

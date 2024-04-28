@@ -1,18 +1,14 @@
-import { createApp, h, Teleport, onMounted } from './vue.runtime.esm-browser'
+import { createApp, h, KeepAlive, onMounted } from './vue.runtime.esm-browser'
+// import { renderer, h, KeepAlive, onMounted } from '@mini-vue/runtime-dom'
 console.log('--start--')
 
 // 生命周期演示
-// <template>
-//   <div>
-//     <button @click="changeFlag">click</button>
-//     <Teleport v-if="flag" to="body">
-//       <div>teleport</div>
-//     </Teleport >
-//     <div v-else>else</div>
-//     <div>end</div>
-//   </div>
-// </template>
- 
+/**
+ * <keep-alive>
+ *   <div v-if="true">true</div>
+ *   <div v-else>false</div>
+ * </keep-alive>
+ */
 const Child1 = {
     name: 'Child1',
     setup () {
@@ -42,6 +38,11 @@ const App = {
             flag: true
         }
     },
+    setup () {
+        onMounted(function () {
+            console.log('App mounted', this)
+        })
+    },
     render(proxy) {
         return h('div', {}, [
             h('button', {
@@ -49,12 +50,14 @@ const App = {
                     proxy.flag = !proxy.flag
                 }
             }, 'click'),
-            proxy.flag ? h(Teleport, {
-                to: 'body',
-            }, [
-                 h('div', null, 'Teleport') 
-            ]) : h('div', null, 'else'),
-            h('div', null, 'end'),
+            h(KeepAlive, null, [
+                proxy.flag ? h(Child1) : h(Child2)
+            ])
+            // h(KeepAlive, null, {
+            //     default () {
+            //         return proxy.flag ? h(Child1) : h(Child2)
+            //     }
+            // })
         ])
     }
 }

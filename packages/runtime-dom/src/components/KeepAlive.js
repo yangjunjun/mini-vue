@@ -1,11 +1,11 @@
-import { currentInstance } from '../intance.js'
+import { getCurrentInstance } from '../intance.js'
 
 const KeepAlive = {
   // KeepAlive 组件独有的属性，用作标识
   __isKeepAlive: true,
   setup(props, { slots }) {
     const cache = new Map()
-    const instance = currentInstance
+    const instance = getCurrentInstance()
     const { move, createElement } = instance.keepAliveCtx
 
     const storageContainer = createElement('div')
