@@ -4,9 +4,28 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "lint": "prettier --check \"packages/**/*.{js,jsx}\"",
+    "lint:fix": "pnpm run lint --write",
     "test": "pnpm run -r test --reporter=dot --run"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged",
+    "commit-msg": "node scripts/verifyCommit.mjs"
+  },
+  "lint-staged": {
+    "*.{js,mjs,json,cjs}": [
+      "prettier --write"
+    ],
+    "*.ts?(x)": [
+      "prettier --parser=typescript --write"
+    ]
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "lint-staged": "15.2.2",
+    "prettier": "3.2.5",
+    "simple-git-hooks": "2.11.1"
+  }
 }

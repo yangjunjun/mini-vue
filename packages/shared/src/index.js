@@ -1,38 +1,31 @@
 const isObject = (value) => {
-    return value !== null && typeof value === 'object'
-}
+  return value !== null && typeof value === "object";
+};
 const isArray = (value) => {
-    return Array.isArray(value)
-}
+  return Array.isArray(value);
+};
 const isMap = (obj) => {
-    return Object.prototype.toString.call(obj) === '[object Map]'
-}
+  return Object.prototype.toString.call(obj) === "[object Map]";
+};
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 const hasOwn = (val, key) => hasOwnProperty.call(val, key);
 
 const cacheStringFunction = (fn) => {
-    const cache = Object.create(null);
-    return (str) => {
-        const hit = cache[str];
-        return hit || (cache[str] = fn(str));
-    };
-}
+  const cache = Object.create(null);
+  return (str) => {
+    const hit = cache[str];
+    return hit || (cache[str] = fn(str));
+  };
+};
 
 const hyphenateRE = /\B([A-Z])/g;
 /**
  * backgroundColor -> background-color
  */
-const hyphenate = cacheStringFunction(
-    (str) => str.replace(hyphenateRE, "-$1").toLowerCase()
-)
+const hyphenate = cacheStringFunction((str) =>
+  str.replace(hyphenateRE, "-$1").toLowerCase(),
+);
 const capitalise = cacheStringFunction(
-    (str) => str.slice(0, 1).toUpperCase() + str.slice(1)
-)
-export {
-    isMap,
-    isObject,
-    isArray,
-    hasOwn,
-    hyphenate,
-    capitalise,
-}
+  (str) => str.slice(0, 1).toUpperCase() + str.slice(1),
+);
+export { isMap, isObject, isArray, hasOwn, hyphenate, capitalise };

@@ -1,187 +1,193 @@
-import { expect, test, vi } from 'vitest'
+import { expect, test, vi } from "vitest";
 
-import { reactive, effect } from '../src/index.js'
+import { reactive, effect } from "../src/index.js";
 // import { reactive, effect } from '../src/reacitve.js'
 
-test('Map.get', () => {
-    const fn = vi.fn()
-    const state = reactive(new Map([['name', 'bob']]))
+test("Map.get", () => {
+  const fn = vi.fn();
+  const state = reactive(new Map([["name", "bob"]]));
 
-    effect(() => fn(state.get('name')))
-    // init
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn).toHaveBeenCalledWith('bob')
-    
-    // set
-    state.set('name', 'lucy')
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn).toHaveBeenCalledWith('lucy')
-    // set
-    state.delete('name')
-    expect(fn).toHaveBeenCalledTimes(3)
-    expect(fn).toHaveBeenCalledWith(undefined)
-})
+  effect(() => fn(state.get("name")));
+  // init
+  expect(fn).toHaveBeenCalledTimes(1);
+  expect(fn).toHaveBeenCalledWith("bob");
 
-test('Map.get deep', () => {
-    const fn = vi.fn()
-    const state = reactive(new Map([['person', {
-        name: 'bob',
-    }]]))
+  // set
+  state.set("name", "lucy");
+  expect(fn).toHaveBeenCalledTimes(2);
+  expect(fn).toHaveBeenCalledWith("lucy");
+  // set
+  state.delete("name");
+  expect(fn).toHaveBeenCalledTimes(3);
+  expect(fn).toHaveBeenCalledWith(undefined);
+});
 
-    effect(() => fn(state.get('person').name))
+test("Map.get deep", () => {
+  const fn = vi.fn();
+  const state = reactive(
+    new Map([
+      [
+        "person",
+        {
+          name: "bob",
+        },
+      ],
+    ]),
+  );
 
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn).toHaveBeenCalledWith('bob')
-    
-    // state change
-    state.get('person').name = 'lucy'
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn).toHaveBeenCalledWith('lucy')
-})
+  effect(() => fn(state.get("person").name));
 
-test('Map.has', () => {
-    const fn = vi.fn()
-    const state = reactive(new Map([['name', 'bob']]))
+  expect(fn).toHaveBeenCalledTimes(1);
+  expect(fn).toHaveBeenCalledWith("bob");
 
-    effect(() => fn(state.has('name')))
+  // state change
+  state.get("person").name = "lucy";
+  expect(fn).toHaveBeenCalledTimes(2);
+  expect(fn).toHaveBeenCalledWith("lucy");
+});
 
-    // init
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn).toHaveBeenCalledWith(true)
-    
-    // set
-    state.set('name', 'lucy')
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn).toHaveBeenCalledWith(true)
+test("Map.has", () => {
+  const fn = vi.fn();
+  const state = reactive(new Map([["name", "bob"]]));
 
-    // delete
-    state.delete('name')
-    expect(fn).toHaveBeenCalledTimes(3)
-    expect(fn).toHaveBeenCalledWith(false) 
+  effect(() => fn(state.has("name")));
 
-    // add
-    state.set('name', 'john')
-    expect(fn).toHaveBeenCalledTimes(4)
-    expect(fn).toHaveBeenCalledWith(true)
+  // init
+  expect(fn).toHaveBeenCalledTimes(1);
+  expect(fn).toHaveBeenCalledWith(true);
 
-    // clear
-    state.clear()
-    expect(fn).toHaveBeenCalledTimes(5)
-    expect(fn).toHaveBeenCalledWith(false)
-})
+  // set
+  state.set("name", "lucy");
+  expect(fn).toHaveBeenCalledTimes(2);
+  expect(fn).toHaveBeenCalledWith(true);
 
-test('Map size', () => {
-    const fn = vi.fn()
-    const state = reactive(new Map([['name', 'bob']]))
+  // delete
+  state.delete("name");
+  expect(fn).toHaveBeenCalledTimes(3);
+  expect(fn).toHaveBeenCalledWith(false);
 
-    effect(() => fn(state.size))
+  // add
+  state.set("name", "john");
+  expect(fn).toHaveBeenCalledTimes(4);
+  expect(fn).toHaveBeenCalledWith(true);
 
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn).toHaveBeenCalledWith(1)
-    
-    // state add
-    state.set('age', 18)
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn).toHaveBeenCalledWith(2)
+  // clear
+  state.clear();
+  expect(fn).toHaveBeenCalledTimes(5);
+  expect(fn).toHaveBeenCalledWith(false);
+});
 
-    // state set
-    state.set('name', 'lucy')
-    expect(fn).toHaveBeenCalledTimes(3)
-    expect(fn).toHaveBeenCalledWith(2)
+test("Map size", () => {
+  const fn = vi.fn();
+  const state = reactive(new Map([["name", "bob"]]));
 
-    // state delete
-    state.delete('name')
-    expect(fn).toHaveBeenCalledTimes(4)
-    expect(fn).toHaveBeenCalledWith(1)    
-})
+  effect(() => fn(state.size));
 
-test('Map.forEach', () => {
-    const fn = vi.fn()
-    const state = reactive(new Map([['name', 'bob']]))
+  expect(fn).toHaveBeenCalledTimes(1);
+  expect(fn).toHaveBeenCalledWith(1);
 
-    effect(() => 
-        state.forEach((value, key) => {
-            fn(value, key)
-        })
-    )
-    // init
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn).toHaveBeenCalledWith('bob', 'name')
-    
+  // state add
+  state.set("age", 18);
+  expect(fn).toHaveBeenCalledTimes(2);
+  expect(fn).toHaveBeenCalledWith(2);
 
-    // state set
-    state.set('name', 'lucy')
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn).toHaveBeenCalledWith('lucy', 'name')
-    
-    // state add
-    state.set('age', 18)
-    expect(fn).toHaveBeenCalledTimes(4)
-    expect(fn).toHaveBeenNthCalledWith(3, 'lucy', 'name')
-    expect(fn).toHaveBeenNthCalledWith(4, 18, 'age')
+  // state set
+  state.set("name", "lucy");
+  expect(fn).toHaveBeenCalledTimes(3);
+  expect(fn).toHaveBeenCalledWith(2);
 
-    // state delete
-    state.delete('name')
-    expect(fn).toHaveBeenCalledTimes(5)
-    expect(fn).toHaveBeenNthCalledWith(5, 18, 'age') 
-})
+  // state delete
+  state.delete("name");
+  expect(fn).toHaveBeenCalledTimes(4);
+  expect(fn).toHaveBeenCalledWith(1);
+});
 
-test('Map.for...of', () => {
-    const fn = vi.fn()
-    const state = reactive(new Map([['name', 'bob']]))
+test("Map.forEach", () => {
+  const fn = vi.fn();
+  const state = reactive(new Map([["name", "bob"]]));
 
-    effect(() => {
-        for (const [key, value] of state) {
-            fn(value, key)
-        }        
-    })
-    // init
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn).toHaveBeenCalledWith('bob', 'name')
+  effect(() =>
+    state.forEach((value, key) => {
+      fn(value, key);
+    }),
+  );
+  // init
+  expect(fn).toHaveBeenCalledTimes(1);
+  expect(fn).toHaveBeenCalledWith("bob", "name");
 
-    // state set
-    state.set('name', 'lucy')
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn).toHaveBeenCalledWith('lucy', 'name')  
-    
-    // state add
-    state.set('age', 18)
-    expect(fn).toHaveBeenCalledTimes(4)
-    expect(fn).toHaveBeenNthCalledWith(3, 'lucy', 'name')
-    expect(fn).toHaveBeenNthCalledWith(4, 18, 'age')
+  // state set
+  state.set("name", "lucy");
+  expect(fn).toHaveBeenCalledTimes(2);
+  expect(fn).toHaveBeenCalledWith("lucy", "name");
 
-    // state delete
-    state.delete('name')
-    expect(fn).toHaveBeenCalledTimes(5)
-    expect(fn).toHaveBeenNthCalledWith(5, 18, 'age')     
-})
+  // state add
+  state.set("age", 18);
+  expect(fn).toHaveBeenCalledTimes(4);
+  expect(fn).toHaveBeenNthCalledWith(3, "lucy", "name");
+  expect(fn).toHaveBeenNthCalledWith(4, 18, "age");
 
-test('Map.keys', () => {
-    const fn = vi.fn()
-    const state = reactive(new Map([['name', 'bob']]))
+  // state delete
+  state.delete("name");
+  expect(fn).toHaveBeenCalledTimes(5);
+  expect(fn).toHaveBeenNthCalledWith(5, 18, "age");
+});
 
-    effect(() => {
-        for (const key of state.keys()) {
-            fn(key)
-        }        
-    })
-    // init
-    expect(fn).toHaveBeenCalledTimes(1)
-    expect(fn).toHaveBeenCalledWith('name')
+test("Map.for...of", () => {
+  const fn = vi.fn();
+  const state = reactive(new Map([["name", "bob"]]));
 
-    // state set
-    state.set('name', 'lucy')
-    expect(fn).toHaveBeenCalledTimes(2)
-    expect(fn).toHaveBeenCalledWith('name')  
-    
-    // state add
-    state.set('age', 18)
-    expect(fn).toHaveBeenCalledTimes(4)
-    expect(fn).toHaveBeenNthCalledWith(3, 'name')
-    expect(fn).toHaveBeenNthCalledWith(4, 'age')
+  effect(() => {
+    for (const [key, value] of state) {
+      fn(value, key);
+    }
+  });
+  // init
+  expect(fn).toHaveBeenCalledTimes(1);
+  expect(fn).toHaveBeenCalledWith("bob", "name");
 
-    // state delete
-    state.delete('name')
-    expect(fn).toHaveBeenCalledTimes(5)
-    expect(fn).toHaveBeenNthCalledWith(5, 'age')     
-})
+  // state set
+  state.set("name", "lucy");
+  expect(fn).toHaveBeenCalledTimes(2);
+  expect(fn).toHaveBeenCalledWith("lucy", "name");
+
+  // state add
+  state.set("age", 18);
+  expect(fn).toHaveBeenCalledTimes(4);
+  expect(fn).toHaveBeenNthCalledWith(3, "lucy", "name");
+  expect(fn).toHaveBeenNthCalledWith(4, 18, "age");
+
+  // state delete
+  state.delete("name");
+  expect(fn).toHaveBeenCalledTimes(5);
+  expect(fn).toHaveBeenNthCalledWith(5, 18, "age");
+});
+
+test("Map.keys", () => {
+  const fn = vi.fn();
+  const state = reactive(new Map([["name", "bob"]]));
+
+  effect(() => {
+    for (const key of state.keys()) {
+      fn(key);
+    }
+  });
+  // init
+  expect(fn).toHaveBeenCalledTimes(1);
+  expect(fn).toHaveBeenCalledWith("name");
+
+  // state set
+  state.set("name", "lucy");
+  expect(fn).toHaveBeenCalledTimes(2);
+  expect(fn).toHaveBeenCalledWith("name");
+
+  // state add
+  state.set("age", 18);
+  expect(fn).toHaveBeenCalledTimes(4);
+  expect(fn).toHaveBeenNthCalledWith(3, "name");
+  expect(fn).toHaveBeenNthCalledWith(4, "age");
+
+  // state delete
+  state.delete("name");
+  expect(fn).toHaveBeenCalledTimes(5);
+  expect(fn).toHaveBeenNthCalledWith(5, "age");
+});
