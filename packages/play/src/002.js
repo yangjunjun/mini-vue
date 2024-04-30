@@ -1,4 +1,4 @@
-import { renderer, h } from "@mini-vue/runtime-dom";
+import { renderer } from "@mini-vue/runtime-dom";
 console.log("--start--");
 const Comp = {
   name: "test",

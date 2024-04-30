@@ -19,7 +19,7 @@ const App = h({
       num: 0,
     };
   },
-  render(proxy) {
+  render() {
     return h("div", {}, [
       h("p", {}, this.num),
       h(Child, null, {
