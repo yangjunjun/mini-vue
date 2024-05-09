@@ -12,4 +12,5 @@
 
 ## todo
 
-1. 增加 eslint
+1. 增加 eslint/prettier/lint-staged 等工具 ✔
+2. 完善 reative 功能
